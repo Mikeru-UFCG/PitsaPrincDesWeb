@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Estabelecimento {
+  id   String @id @map("_id") @db.ObjectId
+  nome String
+  cod_acesso String
+}
+
+model Entregador {
+  id   String @id @map("_id") @db.ObjectId
+  nome String
+  placa_veiculo String
+  tipo_veiculo String
+  cor_veiculo String
+  cod_acesso String
+}
+
+model Cliente {
+  id   String @id @map("_id") @db.ObjectId
+  nome String
+  endereco_principal String
+  cod_acesso String
+}
+
+model Sabor {
+  id             String @id @map("_id") @db.ObjectId
+  nome           String
+  cod_acesso     String @unique
+  valor_media    Float
+  valor_grande   Float
+  disponibilidade Boolean
+}
