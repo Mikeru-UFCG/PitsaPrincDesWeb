@@ -1,39 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model Estabelecimento {
-  id   String @id @map("_id") @db.ObjectId
-  nome String
-  cod_acesso String
-}
+// schema.prisma
 
-model Entregador {
-  id   String @id @map("_id") @db.ObjectId
-  nome String
-  placa_veiculo String
-  tipo_veiculo String
-  cor_veiculo String
-  cod_acesso String
+// schema.prisma
+
+model Estabelecimento {
+  id                Int                @id @default(autoincrement())
+  codigoAcesso      String             @unique
+  nome              String
+  sabores           Sabor[]
+  entregadores      EntregadorEstabelecimento[]
+  operacoes         OperacaoEstabelecimento[]
+  pedidos           Pedido[]
 }
 
 model Cliente {
-  id   String @id @map("_id") @db.ObjectId
-  nome String
-  endereco_principal String
-  cod_acesso String
+  id                Int                @id @default(autoincrement())
+  nome              String
+  endereco          String
+  codigoAcesso      String
+  entregadores      EntregadorCliente[]
+  operacoes         OperacaoCliente[]
+  pedidos           Pedido[]
+  interesses        InteresseSabor[]
+  notificacoes      Notificacao[]
+}
+
+model Entregador {
+  id                Int                @id @default(autoincrement())
+  nome              String
+  placaVeiculo      String
+  tipoVeiculo       TipoVeiculo
+  corVeiculo        String
+  codigoAcesso      String
+  status            EntregadorStatus   @default(DESCANSO)
+  estabelecimentos EntregadorEstabelecimento[]
+  clientes          EntregadorCliente[]
+  entregas          Entrega[]
+  pedidos           Pedido[]
 }
 
 model Sabor {
-  id             String @id @map("_id") @db.ObjectId
-  nome           String
-  cod_acesso     String @unique
-  valor_media    Float
-  valor_grande   Float
-  disponibilidade Boolean
+  id                Int                @id @default(autoincrement())
+  nome              String
+  tipo              TipoSabor
+  valorMedio        Float
+  valorGrande       Float
+  disponibilidade   Boolean            @default(true)
+  estabelecimentos Estabelecimento[]
+  pedidos           PizzaSabor[]
+  interesses        InteresseSabor[]
 }
+
+model Pedido {
+  id                Int                @id @default(autoincrement())
+  clienteId         Int
+  estabelecimentoId Int
+  enderecoEntrega   String?
+  status            PedidoStatus       @default(RECEBIDO)
+  valorTotal        Float
+  pagamento         Pagamento
+  cliente           Cliente            @relation(fields: [clienteId], references: [id])
+  estabelecimento   Estabelecimento    @relation(fields: [estabelecimentoId], references: [id])
+  pizzas            Pizza[]
+  entregadorId      Int?               // Ajustado para opcional
+  entregador        Entregador?        @relation(fields: [entregadorId], references: [id]) // Ajustado para opcional
+  notificacoes      Notificacao[]
+  entregas          Entrega[]          // Novo campo adicionado
+}
+
+model Pizza {
+  id                Int                @id @default(autoincrement())
+  pedidoId          Int
+  tamanho           TamanhoPizza
+  sabores           PizzaSabor[]
+  pedido            Pedido             @relation(fields: [pedidoId], references: [id])
+}
+
+model PizzaSabor {
+  id                Int                @id @default(autoincrement())
+  pizzaId           Int
+  saborId           Int
+  pizza             Pizza              @relation(fields: [pizzaId], references: [id])
+  sabor             Sabor              @relation(fields: [saborId], references: [id])
+}
+
+model InteresseSabor {
+  id                Int                @id @default(autoincrement())
+  clienteId         Int
+  saborId           Int
+  cliente           Cliente            @relation(fields: [clienteId], references: [id])
+  sabor             Sabor              @relation(fields: [saborId], references: [id])
+}
+
+model EntregadorEstabelecimento {
+  id                Int                @id @default(autoincrement())
+  entregadorId      Int
+  estabelecimentoId Int
+  aprovado          Boolean
+  entregador        Entregador         @relation(fields: [entregadorId], references: [id])
+  estabelecimento   Estabelecimento    @relation(fields: [estabelecimentoId], references: [id])
+}
+
+model EntregadorCliente {
+  id                Int                @id @default(autoincrement())
+  entregadorId      Int
+  clienteId         Int
+  entregador        Entregador         @relation(fields: [entregadorId], references: [id])
+  cliente           Cliente            @relation(fields: [clienteId], references: [id])
+}
+
+model OperacaoEstabelecimento {
+  id                Int                @id @default(autoincrement())
+  estabelecimentoId Int
+  codigoAcesso      String
+  operacaoTipo      OperacaoTipo
+  estabelecimento   Estabelecimento    @relation(fields: [estabelecimentoId], references: [id])
+}
+
+model OperacaoCliente {
+  id                Int                @id @default(autoincrement())
+  clienteId         Int
+  codigoAcesso      String
+  operacaoTipo      OperacaoTipo
+  cliente           Cliente            @relation(fields: [clienteId], references: [id])
+}
+
+model Notificacao {
+  id                Int                @id @default(autoincrement())
+  clienteId         Int?
+  pedidoId          Int?               // Novo campo adicionado
+  mensagem          String
+  cliente           Cliente?           @relation(fields: [clienteId], references: [id])
+  pedido            Pedido?            @relation(fields: [pedidoId], references: [id])
+}
+
+model Entrega {
+  id                Int                @id @default(autoincrement())
+  pedidoId          Int
+  entregadorId      Int?
+  status            EntregaStatus      @default(ATRIBUIDO)
+  pedido            Pedido             @relation(fields: [pedidoId], references: [id])
+  entregador        Entregador?        @relation(fields: [entregadorId], references: [id])
+}
+
+enum TipoVeiculo {
+  MOTO
+  CARRO
+}
+
+enum TipoSabor {
+  SALGADO
+  DOCE
+}
+
+enum PedidoStatus {
+  RECEBIDO
+  PREPARO
+  PRONTO
+  ROTA
+  ENTREGUE
+}
+
+enum Pagamento {
+  CARTAO_CREDITO
+  CARTAO_DEBITO
+  PIX
+}
+
+enum EntregadorStatus {
+  DESCANSO
+  ATIVO
+}
+
+enum EntregaStatus {
+  ATRIBUIDO
+  EM_PREPARO
+  PRONTO
+  EM_ROTA
+  ENTREGUE
+}
+
+enum TamanhoPizza {
+  MEDIA
+  GRANDE
+}
+
+enum OperacaoTipo {
+  CADASTRO
+  ALTERACAO
+  EXCLUSAO
+}
+
