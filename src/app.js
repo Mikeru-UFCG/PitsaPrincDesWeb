@@ -6,7 +6,7 @@ const { PrismaClient } = require('@prisma/client');
 const estabelecimentoRoutes = require('./routes/estabelecimentoRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
 const entregadorRoutes = require('./routes/entregadorRoutes');
-const saborRoutes = require('./routes/SaborRoutes');
+const saborRoutes = require('./routes/saborRoutes');  // Corrigido para minúscula
 const entregaRoutes = require('./routes/entregaRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
 const notificacaoRoutes = require('./routes/notificacaoRoutes');
@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 app.use('/estabelecimentos', estabelecimentoRoutes);
 app.use('/clientes', clienteRoutes);
 app.use('/entregadores', entregadorRoutes);
-app.use('/sabores', saborRoutes);
+app.use('/sabores', saborRoutes);  // Certifique-se de que o nome do arquivo e a importação estejam corretos
 app.use('/entregas', entregaRoutes);
 app.use('/pedidos', pedidoRoutes);
 app.use('/notificacoes', notificacaoRoutes);
