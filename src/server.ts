@@ -3,6 +3,7 @@ const express = require('express');
 const app = require('./app');
 const { swaggerUi, specs } = require('./swagger');
 
+// Configuração do Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 const PORT = process.env.PORT || 3000;

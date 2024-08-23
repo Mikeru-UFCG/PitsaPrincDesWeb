@@ -6,7 +6,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'PrinDesWebPizza API',
+      title: 'PrindesWebPizza API',
       version: '1.0.0',
       description: 'API para gerenciamento de pedidos de pizza, clientes, entregadores e estabelecimentos.',
     },
