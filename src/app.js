@@ -34,6 +34,12 @@ app.use('/notificacoes', notificacaoRoutes);
 // Configura o Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
+// Rota para obter a especificação OpenAPI em formato JSON
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
+
 // Middleware para tratamento de erros
 app.use((err, req, res, next) => {
   console.error(err.stack);
