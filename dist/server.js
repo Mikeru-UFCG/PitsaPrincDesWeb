@@ -14,7 +14,7 @@ const port = 3000;
 const swaggerDefinition = {
     openapi: "3.0.0",
     info: {
-        title: "PrindesWebPizza API",
+        title: "PrinDesWebPizza API",
         version: "1.0.0",
         description: "API para gerenciamento de pedidos de pizza, clientes, entregadores e estabelecimentos.",
     },
@@ -35,6 +35,12 @@ app.get('/', (req, res) => {
 
 // Rota de documentação do Swagger
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerSpec));
+
+// Rota para servir o JSON da especificação OpenAPI
+app.get('/swagger.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+});
 
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
