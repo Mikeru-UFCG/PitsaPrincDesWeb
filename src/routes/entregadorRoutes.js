@@ -134,4 +134,60 @@ router.get('/entregadores/:id', EntregadorController.getEntregador);
  */
 router.put('/entregadores/:id/disponibilidade', EntregadorController.definirDisponibilidade);
 
+// routes/entregadorRoutes.js
+
+/**
+ * @swagger
+ * /entregadores/register:
+ *   post:
+ *     summary: Registra um novo entregador
+ *     tags: [Entregadores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *               placaVeiculo:
+ *                 type: string
+ *               tipoVeiculo:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Entregador registrado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ */
+router.post('/entregadores/register', EntregadorController.register);
+
+/**
+ * @swagger
+ * /entregadores/login:
+ *   post:
+ *     summary: Faz login de um entregador
+ *     tags: [Entregadores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login bem-sucedido
+ *       401:
+ *         description: Nome ou senha incorretos
+ */
+router.post('/entregadores/login', EntregadorController.login);
+
 module.exports = router;

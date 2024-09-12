@@ -264,4 +264,59 @@ router.get('/clientes/:id/historico-pedidos', ClienteController.verHistoricoPedi
  */
 router.put('/clientes/:id/pedidos/:pedidoId/confirmar-entrega', ClienteController.confirmarEntrega);
 
+// routes/clienteRoutes.js
+
+/**
+ * @swagger
+ * /clientes/register:
+ *   post:
+ *     summary: Registra um novo cliente
+ *     tags: [Clientes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *               endereco:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Cliente registrado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ */
+router.post('/clientes/register', ClienteController.register);
+
+/**
+ * @swagger
+ * /clientes/login:
+ *   post:
+ *     summary: Faz login de um cliente
+ *     tags: [Clientes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               senha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login bem-sucedido
+ *       401:
+ *         description: Nome ou senha incorretos
+ */
+router.post('/clientes/login', ClienteController.login);
+
+
 module.exports = router;

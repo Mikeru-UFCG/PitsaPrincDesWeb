@@ -154,4 +154,35 @@ router.put('/estabelecimentos/:id/sabores/:saborId/disponibilidade', Estabelecim
  */
 router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', EstabelecimentoController.aprovarEntregador);
 
+/**
+ * @swagger
+ * /estabelecimentos/login:
+ *   post:
+ *     summary: Autentica um estabelecimento com nome e código de acesso
+ *     tags: [Estabelecimentos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *                 description: Nome do estabelecimento
+ *               codigoAcesso:
+ *                 type: string
+ *                 description: Código de acesso do estabelecimento
+ *             required:
+ *               - nome
+ *               - codigoAcesso
+ *     responses:
+ *       200:
+ *         description: Estabelecimento autenticado com sucesso
+ *       401:
+ *         description: Credenciais inválidas
+ */
+router.post('/estabelecimentos/login', EstabelecimentoController.loginEstabelecimento);
+
+
 module.exports = router;

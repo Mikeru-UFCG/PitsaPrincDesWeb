@@ -1,5 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 class EntregadorController {
   static async createEntregador(req, res) {
@@ -62,6 +64,58 @@ class EntregadorController {
       res.status(500).json({ error: 'Erro ao definir disponibilidade' });
     }
   }
+
+  static async register(req, res) {
+    try {
+      const { nome, senha, placaVeiculo, tipoVeiculo } = req.body;
+
+      // Verifica se o entregador já existe
+      const existingDeliverer = await prisma.entregador.findUnique({
+        where: { nome }
+      });
+      if (existingDeliverer) {
+        return res.status(400).json({ error: 'Entregador já existe' });
+      }
+
+      // Cria um hash da senha
+      const hashedPassword = await bcrypt.hash(senha, 10);
+
+      // Cria o novo entregador
+      const entregador = await prisma.entregador.create({
+        data: { nome, senha: hashedPassword, placaVeiculo, tipoVeiculo },
+      });
+
+      // Gera um token JWT
+      const token = jwt.sign({ id: entregador.id }, 'SECRET_KEY', { expiresIn: '1h' });
+
+      res.status(201).json({ entregador, token });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao registrar entregador' });
+    }
+  }
+
+  static async login(req, res) {
+    try {
+      const { nome, senha } = req.body;
+
+      // Busca o entregador
+      const entregador = await prisma.entregador.findUnique({
+        where: { nome }
+      });
+
+      if (!entregador || !(await bcrypt.compare(senha, entregador.senha))) {
+        return res.status(401).json({ error: 'Nome ou senha incorretos' });
+      }
+
+      // Gera um token JWT
+      const token = jwt.sign({ id: entregador.id }, 'SECRET_KEY', { expiresIn: '1h' });
+
+      res.status(200).json({ entregador, token });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao fazer login' });
+    }
+  }
+
 }
 
 module.exports = EntregadorController;

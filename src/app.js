@@ -10,6 +10,8 @@ const saborRoutes = require('./routes/saborRoutes');
 const entregaRoutes = require('./routes/entregaRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
 const notificacaoRoutes = require('./routes/notificacaoRoutes');
+const loginRoutes = require('./routes/loginRoutes');
+const protectedRoutes = require('./routes/protectedRoutes'); // Rotas protegidas
 
 const app = express();
 const prisma = new PrismaClient();
