@@ -152,6 +152,34 @@ class EntregadorController {
       res.status(500).json({ error: 'Erro ao fazer login' });
     }
   }
+
+  static async getEntregadores(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1; // Página atual
+      const limit = parseInt(req.query.limit) || 10; // Itens por página
+      const skip = (page - 1) * limit;
+  
+      const entregadores = await prisma.entregador.findMany({
+        skip: skip,
+        take: limit,
+      });
+  
+      // Contar o total de entregadores para fornecer informações sobre a paginação
+      const totalEntregadores = await prisma.entregador.count();
+  
+      res.status(200).json({
+        data: entregadores,
+        meta: {
+          total: totalEntregadores,
+          page,
+          pages: Math.ceil(totalEntregadores / limit),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao obter entregadores' });
+    }
+  }
+
 }
 
 module.exports = EntregadorController;

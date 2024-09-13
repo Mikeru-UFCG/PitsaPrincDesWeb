@@ -271,7 +271,7 @@ router.delete('/clientes/:id/pedidos/:pedidoId', authMiddleware(['cliente']), Cl
  * @swagger
  * /clientes/{id}/historico-pedidos:
  *   get:
- *     summary: Retorna o histórico de pedidos do cliente
+ *     summary: Retorna o histórico de pedidos do cliente com paginação
  *     tags: [Clientes]
  *     parameters:
  *       - in: path
@@ -280,13 +280,38 @@ router.delete('/clientes/:id/pedidos/:pedidoId', authMiddleware(['cliente']), Cl
  *           type: integer
  *         required: true
  *         description: ID do cliente
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página a ser retornada
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Número de itens por página
  *     responses:
  *       200:
  *         description: Histórico de pedidos retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalCount:
+ *                   type: integer
+ *                   description: Número total de pedidos
+ *                 pedidos:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Pedido'
  *       404:
  *         description: Cliente não encontrado
  */
 router.get('/clientes/:id/historico-pedidos', authMiddleware(['cliente']), ClienteController.verHistoricoPedidos);
+
 
 /**
  * @swagger

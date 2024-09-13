@@ -185,4 +185,32 @@ router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', authMidd
  */
 router.post('/estabelecimentos/login', EstabelecimentoController.loginEstabelecimento);
 
+// Rota para obter uma lista de estabelecimentos com paginação
+/**
+ * @swagger
+ * /estabelecimentos:
+ *   get:
+ *     summary: Obtém uma lista de estabelecimentos com paginação
+ *     tags: [Estabelecimentos]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Número de itens por página
+ *     responses:
+ *       200:
+ *         description: Lista de estabelecimentos paginada
+ *       500:
+ *         description: Erro ao obter estabelecimentos
+ */
+router.get('/estabelecimentos', EstabelecimentoController.getEstabelecimentos);
+
 module.exports = router;

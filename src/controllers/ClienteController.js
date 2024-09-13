@@ -144,18 +144,39 @@ class ClienteController {
 
   static async verHistoricoPedidos(req, res) {
     try {
+      // Obtém parâmetros de consulta para paginação
+      const page = parseInt(req.query.page) || 1; // Página atual
+      const limit = parseInt(req.query.limit) || 10; // Itens por página
+      const skip = (page - 1) * limit; // Número de itens a pular
+  
+      // Obtém os pedidos com paginação
       const pedidos = await prisma.pedido.findMany({
         where: { clienteId: parseInt(req.user.id) }, // Usa o ID do cliente autenticado
+        skip: skip,
+        take: limit,
         orderBy: [
           { status: 'asc' }, // Pedidos não entregues primeiro
           { createdAt: 'desc' }, // Pedidos mais recentes primeiro
         ],
       });
-      res.status(200).json(pedidos);
+  
+      // Conta o total de pedidos para fornecer informações sobre a paginação
+      const totalPedidos = await prisma.pedido.count({
+        where: { clienteId: parseInt(req.user.id) }, // Conta apenas os pedidos do cliente autenticado
+      });
+  
+      res.status(200).json({
+        data: pedidos,
+        meta: {
+          total: totalPedidos,
+          page,
+          pages: Math.ceil(totalPedidos / limit), // Calcula o número total de páginas
+        },
+      });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao obter histórico de pedidos' });
     }
-  }
+  }  
 
   static async confirmarEntrega(req, res) {
     try {

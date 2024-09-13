@@ -135,6 +135,33 @@ router.get('/entregadores/:id', authMiddleware(['estabelecimento']), EntregadorC
  */
 router.put('/entregadores/:id/disponibilidade', authMiddleware(['entregador']), EntregadorController.definirDisponibilidade);
 
+/**
+ * @swagger
+ * /entregadores:
+ *   get:
+ *     summary: Obtém uma lista de entregadores com paginação
+ *     tags: [Entregadores]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número da página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Número de itens por página
+ *     responses:
+ *       200:
+ *         description: Lista de entregadores paginada
+ *       500:
+ *         description: Erro ao obter entregadores
+ */
+router.get('/entregadores', EntregadorController.getEntregadores);
+
 // Rotas públicas (não protegidas por autenticação)
 router.post('/entregadores/register', EntregadorController.register);
 router.post('/entregadores/login', EntregadorController.login);

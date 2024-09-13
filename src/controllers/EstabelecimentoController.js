@@ -127,6 +127,36 @@ class EstabelecimentoController {
       res.status(500).json({ error: 'Erro ao autenticar estabelecimento' });
     }
   }
+
+  // Método para obter uma lista de estabelecimentos com paginação
+static async getEstabelecimentos(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1; // Página atual
+    const limit = parseInt(req.query.limit) || 10; // Itens por página
+    const skip = (page - 1) * limit;
+
+    // Busca os estabelecimentos com paginação
+    const estabelecimentos = await prisma.estabelecimento.findMany({
+      skip: skip,
+      take: limit,
+    });
+
+    // Conta o total de estabelecimentos
+    const totalEstabelecimentos = await prisma.estabelecimento.count();
+
+    res.status(200).json({
+      data: estabelecimentos,
+      meta: {
+        total: totalEstabelecimentos,
+        page,
+        pages: Math.ceil(totalEstabelecimentos / limit),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao obter estabelecimentos' });
+  }
+}
+
 }
 
 module.exports = EstabelecimentoController;
