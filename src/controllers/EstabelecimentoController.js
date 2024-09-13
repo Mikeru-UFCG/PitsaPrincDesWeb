@@ -1,4 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
+const jwt = require('jsonwebtoken');
 const prisma = new PrismaClient();
 
 class EstabelecimentoController {
@@ -23,7 +24,11 @@ class EstabelecimentoController {
       const estabelecimento = await prisma.estabelecimento.create({
         data: { nome, codigoAcesso },
       });
-      res.status(201).json(estabelecimento);
+
+      // Gera um token JWT
+      const token = jwt.sign({ id: estabelecimento.id, role: 'estabelecimento', nome }, process.env.JWT_SECRET || 'SECRET_KEY', { expiresIn: '1h' });
+
+      res.status(201).json({ estabelecimento, token });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao criar estabelecimento' });
     }
@@ -72,7 +77,7 @@ class EstabelecimentoController {
   // Método para alterar a disponibilidade de um sabor
   static async toggleDisponibilidadeSabor(req, res) {
     try {
-      const { id, saborId } = req.params;
+      const { saborId } = req.params;
       const sabor = await prisma.sabor.update({
         where: { id: parseInt(saborId) },
         data: { disponivel: req.body.disponivel },
@@ -86,7 +91,7 @@ class EstabelecimentoController {
   // Método para aprovar um entregador
   static async aprovarEntregador(req, res) {
     try {
-      const { id, entregadorId } = req.params;
+      const { entregadorId } = req.params;
       const entregador = await prisma.entregador.update({
         where: { id: parseInt(entregadorId) },
         data: { aprovado: req.body.aprovado },
@@ -114,8 +119,10 @@ class EstabelecimentoController {
         return res.status(401).json({ error: 'Credenciais inválidas' });
       }
 
-      // Autenticação bem-sucedida; você pode gerar um token JWT aqui se desejar
-      res.status(200).json({ message: 'Autenticação bem-sucedida', estabelecimento });
+      // Gera um token JWT
+      const token = jwt.sign({ id: estabelecimento.id, role: 'estabelecimento', nome }, process.env.JWT_SECRET || 'SECRET_KEY', { expiresIn: '1h' });
+
+      res.status(200).json({ message: 'Autenticação bem-sucedida', token });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao autenticar estabelecimento' });
     }

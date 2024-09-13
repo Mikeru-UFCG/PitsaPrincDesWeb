@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EstabelecimentoController = require('../controllers/EstabelecimentoController');
+const authMiddleware = require('../middlewares/authMiddleware'); // Importa o middleware de autorização
 
 /**
  * @swagger
@@ -56,7 +57,7 @@ router.post('/estabelecimentos', EstabelecimentoController.createEstabelecimento
  *       404:
  *         description: Estabelecimento não encontrado
  */
-router.put('/estabelecimentos/:id', EstabelecimentoController.updateEstabelecimento);
+router.put('/estabelecimentos/:id', authMiddleware(['estabelecimento']), EstabelecimentoController.updateEstabelecimento);
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ router.put('/estabelecimentos/:id', EstabelecimentoController.updateEstabelecime
  *       404:
  *         description: Estabelecimento não encontrado
  */
-router.delete('/estabelecimentos/:id', EstabelecimentoController.deleteEstabelecimento);
+router.delete('/estabelecimentos/:id', authMiddleware(['estabelecimento']), EstabelecimentoController.deleteEstabelecimento);
 
 /**
  * @swagger
@@ -98,7 +99,7 @@ router.delete('/estabelecimentos/:id', EstabelecimentoController.deleteEstabelec
  *       404:
  *         description: Estabelecimento não encontrado
  */
-router.get('/estabelecimentos/:id', EstabelecimentoController.getEstabelecimento);
+router.get('/estabelecimentos/:id', authMiddleware(['estabelecimento']), EstabelecimentoController.getEstabelecimento);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router.get('/estabelecimentos/:id', EstabelecimentoController.getEstabelecimento
  *       404:
  *         description: Estabelecimento ou sabor não encontrado
  */
-router.put('/estabelecimentos/:id/sabores/:saborId/disponibilidade', EstabelecimentoController.toggleDisponibilidadeSabor);
+router.put('/estabelecimentos/:id/sabores/:saborId/disponibilidade', authMiddleware(['estabelecimento']), EstabelecimentoController.toggleDisponibilidadeSabor);
 
 /**
  * @swagger
@@ -152,7 +153,7 @@ router.put('/estabelecimentos/:id/sabores/:saborId/disponibilidade', Estabelecim
  *       404:
  *         description: Estabelecimento ou entregador não encontrado
  */
-router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', EstabelecimentoController.aprovarEntregador);
+router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', authMiddleware(['estabelecimento']), EstabelecimentoController.aprovarEntregador);
 
 /**
  * @swagger
@@ -183,6 +184,5 @@ router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', Estabele
  *         description: Credenciais inválidas
  */
 router.post('/estabelecimentos/login', EstabelecimentoController.loginEstabelecimento);
-
 
 module.exports = router;

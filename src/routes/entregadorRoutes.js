@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EntregadorController = require('../controllers/EntregadorController');
+const authMiddleware = require('../middlewares/authMiddleware'); // Importa o middleware
 
 /**
  * @swagger
@@ -27,7 +28,7 @@ const EntregadorController = require('../controllers/EntregadorController');
  *       400:
  *         description: Dados inválidos
  */
-router.post('/entregadores', EntregadorController.createEntregador);
+router.post('/entregadores', authMiddleware(['estabelecimento']), EntregadorController.createEntregador);
 
 /**
  * @swagger
@@ -56,7 +57,7 @@ router.post('/entregadores', EntregadorController.createEntregador);
  *       404:
  *         description: Entregador não encontrado
  */
-router.put('/entregadores/:id', EntregadorController.updateEntregador);
+router.put('/entregadores/:id', authMiddleware(['estabelecimento']), EntregadorController.updateEntregador);
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ router.put('/entregadores/:id', EntregadorController.updateEntregador);
  *       404:
  *         description: Entregador não encontrado
  */
-router.delete('/entregadores/:id', EntregadorController.deleteEntregador);
+router.delete('/entregadores/:id', authMiddleware(['estabelecimento']), EntregadorController.deleteEntregador);
 
 /**
  * @swagger
@@ -98,7 +99,7 @@ router.delete('/entregadores/:id', EntregadorController.deleteEntregador);
  *       404:
  *         description: Entregador não encontrado
  */
-router.get('/entregadores/:id', EntregadorController.getEntregador);
+router.get('/entregadores/:id', authMiddleware(['estabelecimento']), EntregadorController.getEntregador);
 
 /**
  * @swagger
@@ -132,62 +133,10 @@ router.get('/entregadores/:id', EntregadorController.getEntregador);
  *       404:
  *         description: Entregador não encontrado
  */
-router.put('/entregadores/:id/disponibilidade', EntregadorController.definirDisponibilidade);
+router.put('/entregadores/:id/disponibilidade', authMiddleware(['entregador']), EntregadorController.definirDisponibilidade);
 
-// routes/entregadorRoutes.js
-
-/**
- * @swagger
- * /entregadores/register:
- *   post:
- *     summary: Registra um novo entregador
- *     tags: [Entregadores]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nome:
- *                 type: string
- *               senha:
- *                 type: string
- *               placaVeiculo:
- *                 type: string
- *               tipoVeiculo:
- *                 type: string
- *     responses:
- *       201:
- *         description: Entregador registrado com sucesso
- *       400:
- *         description: Dados inválidos
- */
+// Rotas públicas (não protegidas por autenticação)
 router.post('/entregadores/register', EntregadorController.register);
-
-/**
- * @swagger
- * /entregadores/login:
- *   post:
- *     summary: Faz login de um entregador
- *     tags: [Entregadores]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               nome:
- *                 type: string
- *               senha:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login bem-sucedido
- *       401:
- *         description: Nome ou senha incorretos
- */
 router.post('/entregadores/login', EntregadorController.login);
 
 module.exports = router;

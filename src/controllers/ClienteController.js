@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 class ClienteController {
   static async createCliente(req, res) {
     try {
+      // As ações de criação de cliente devem ser protegidas e apenas permitidas para administradores
+      // O middleware de autenticação deve estar em uso aqui
       const cliente = await prisma.cliente.create({
         data: req.body,
       });
@@ -18,6 +20,12 @@ class ClienteController {
   static async updateCliente(req, res) {
     try {
       const { id } = req.params;
+      
+      // Verifica se o cliente está tentando atualizar seu próprio perfil
+      if (parseInt(id) !== req.user.id) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+      
       const cliente = await prisma.cliente.update({
         where: { id: parseInt(id) },
         data: req.body,
@@ -31,6 +39,12 @@ class ClienteController {
   static async deleteCliente(req, res) {
     try {
       const { id } = req.params;
+
+      // Verifica se o cliente está tentando deletar seu próprio perfil
+      if (parseInt(id) !== req.user.id) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+      
       await prisma.cliente.delete({
         where: { id: parseInt(id) },
       });
@@ -43,6 +57,12 @@ class ClienteController {
   static async getCliente(req, res) {
     try {
       const { id } = req.params;
+      
+      // Verifica se o cliente está tentando acessar seu próprio perfil
+      if (parseInt(id) !== req.user.id) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+
       const cliente = await prisma.cliente.findUnique({
         where: { id: parseInt(id) },
       });
@@ -84,7 +104,7 @@ class ClienteController {
     try {
       const pedido = await prisma.pedido.create({
         data: {
-          clienteId: parseInt(req.params.id),
+          clienteId: parseInt(req.user.id), // Usa o ID do cliente autenticado
           ...req.body,
         },
       });
@@ -96,7 +116,7 @@ class ClienteController {
 
   static async confirmarPagamento(req, res) {
     try {
-      const { id, pedidoId } = req.params;
+      const { pedidoId } = req.params;
       const pedido = await prisma.pedido.update({
         where: { id: parseInt(pedidoId) },
         data: { status: 'Pedido em preparo' }, // Atualiza o status
@@ -109,11 +129,11 @@ class ClienteController {
 
   static async cancelarPedido(req, res) {
     try {
-      const { id, pedidoId } = req.params;
+      const { pedidoId } = req.params;
       const pedido = await prisma.pedido.delete({
         where: {
           id: parseInt(pedidoId),
-          clienteId: parseInt(id),
+          clienteId: parseInt(req.user.id), // Usa o ID do cliente autenticado
         },
       });
       res.status(204).end();
@@ -124,9 +144,8 @@ class ClienteController {
 
   static async verHistoricoPedidos(req, res) {
     try {
-      const { id } = req.params;
       const pedidos = await prisma.pedido.findMany({
-        where: { clienteId: parseInt(id) },
+        where: { clienteId: parseInt(req.user.id) }, // Usa o ID do cliente autenticado
         orderBy: [
           { status: 'asc' }, // Pedidos não entregues primeiro
           { createdAt: 'desc' }, // Pedidos mais recentes primeiro
@@ -140,11 +159,11 @@ class ClienteController {
 
   static async confirmarEntrega(req, res) {
     try {
-      const { id, pedidoId } = req.params;
+      const { pedidoId } = req.params;
       const pedido = await prisma.pedido.update({
         where: {
           id: parseInt(pedidoId),
-          clienteId: parseInt(id),
+          clienteId: parseInt(req.user.id), // Usa o ID do cliente autenticado
         },
         data: { status: 'Pedido entregue' }, // Atualiza o status
       });
@@ -204,7 +223,6 @@ class ClienteController {
       res.status(500).json({ error: 'Erro ao fazer login' });
     }
   }
-
 }
 
 module.exports = ClienteController;
