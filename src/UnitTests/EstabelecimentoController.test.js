@@ -354,7 +354,8 @@ describe('EstabelecimentoController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Credenciais inválidas' });
     });
   });
-  describe('createEstabelecimento', () => {
+
+  describe('register', () => {
     it('deve registrar um novo estabelecimento com sucesso', async () => {
       req.body = {
         nome: 'Estabelecimento Teste',
