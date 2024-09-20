@@ -185,6 +185,43 @@ router.post('/estabelecimentos/:id/entregadores/:entregadorId/aprovar', authMidd
  */
 router.post('/estabelecimentos/login', EstabelecimentoController.loginEstabelecimento);
 
+/**
+ * @swagger
+ * /estabelecimentos:
+ *   post:
+ *     summary: Registra um novo estabelecimento
+ *     tags: [Estabelecimentos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nome:
+ *                 type: string
+ *                 description: Nome do estabelecimento
+ *               codigoAcesso:
+ *                 type: string
+ *                 description: Código de acesso do estabelecimento
+ *               senha:
+ *                 type: string
+ *                 description: Senha do estabelecimento
+ *             required:
+ *               - nome
+ *               - codigoAcesso
+ *               - senha
+ *     responses:
+ *       201:
+ *         description: Estabelecimento registrado com sucesso
+ *       400:
+ *         description: Estabelecimento já existe
+ *       500:
+ *         description: Erro ao criar estabelecimento
+ */
+router.post('/estabelecimentos', EstabelecimentoController.createEstabelecimento);
+
+
 // Rota para obter uma lista de estabelecimentos com paginação
 /**
  * @swagger

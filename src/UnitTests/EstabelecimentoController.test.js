@@ -182,6 +182,69 @@ describe('EstabelecimentoController', () => {
     });
   });
 
+  describe('getEstabelecimentos', () => {
+    it('deve retornar uma lista de estabelecimentos com sucesso', async () => {
+      req.query = { page: 1, limit: 10 };
+      const estabelecimentosMock = [{ id: 1, nome: 'Estabelecimento 1' }];
+      const totalMock = 1;
+
+      PrismaClient.prototype.estabelecimento.findMany.mockResolvedValue(estabelecimentosMock);
+      PrismaClient.prototype.estabelecimento.count.mockResolvedValue(totalMock);
+
+      await EstabelecimentoController.getEstabelecimentos(req, res);
+
+      expect(PrismaClient.prototype.estabelecimento.findMany).toHaveBeenCalledWith({
+        skip: 0, // (1 - 1) * 10
+        take: 10,
+      });
+      expect(PrismaClient.prototype.estabelecimento.count).toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        data: estabelecimentosMock,
+        meta: {
+          total: totalMock,
+          page: 1,
+          pages: 1,
+        },
+      });
+    });
+
+    it('deve retornar erro ao falhar ao obter estabelecimentos', async () => {
+      req.query = { page: 1, limit: 10 };
+      PrismaClient.prototype.estabelecimento.findMany.mockRejectedValue(new Error('Erro ao obter estabelecimentos'));
+
+      await EstabelecimentoController.getEstabelecimentos(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao obter estabelecimentos' });
+    });
+
+    it('deve utilizar valores padrão de paginação se não forem fornecidos', async () => {
+      req.query = {}; // Nenhum parâmetro de paginação fornecido
+      const estabelecimentosMock = [{ id: 1, nome: 'Estabelecimento 1' }];
+      const totalMock = 1;
+
+      PrismaClient.prototype.estabelecimento.findMany.mockResolvedValue(estabelecimentosMock);
+      PrismaClient.prototype.estabelecimento.count.mockResolvedValue(totalMock);
+
+      await EstabelecimentoController.getEstabelecimentos(req, res);
+
+      expect(PrismaClient.prototype.estabelecimento.findMany).toHaveBeenCalledWith({
+        skip: 0, // (1 - 1) * 10
+        take: 10,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        data: estabelecimentosMock,
+        meta: {
+          total: totalMock,
+          page: 1,
+          pages: 1,
+        },
+      });
+    });
+  });
+
   describe('toggleDisponibilidadeSabor', () => {
     it('Deve alterar a disponibilidade de um sabor no cardápio do estabelecimento', async () => {
       req.params = { id: '1', saborId: '2' };
@@ -261,7 +324,7 @@ describe('EstabelecimentoController', () => {
     });
   });
 
-  describe('loginEstabelecimento', () => {
+  describe('login', () => {
     it('Deve autenticar um estabelecimento com nome e código de acesso', async () => {
       req.body = { nome: 'estabelecimentoTeste', codigoAcesso: '123456' };
 
@@ -291,41 +354,75 @@ describe('EstabelecimentoController', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Credenciais inválidas' });
     });
   });
+  describe('createEstabelecimento', () => {
+    it('deve registrar um novo estabelecimento com sucesso', async () => {
+      req.body = {
+        nome: 'Estabelecimento Teste',
+        codigoAcesso: '123456',
+        senha: 'senha123',
+      };
 
-  describe('getEstabelecimentos', () => {
-    it('Deve obter uma lista de estabelecimentos com paginação', async () => {
-      req.query = { page: '1', limit: '10' };
-
-      PrismaClient.prototype.estabelecimento.findMany.mockResolvedValue([{ id: 1, nome: 'estabelecimentoTeste' }]);
-      PrismaClient.prototype.estabelecimento.count.mockResolvedValue(1);
-
-      await EstabelecimentoController.getEstabelecimentos(req, res);
-
-      expect(PrismaClient.prototype.estabelecimento.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 10,
+      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null); // Nenhum estabelecimento encontrado
+      PrismaClient.prototype.estabelecimento.create.mockResolvedValue({
+        id: 1,
+        nome: 'Estabelecimento Teste',
+        codigoAcesso: '123456',
       });
-      expect(PrismaClient.prototype.estabelecimento.count).toHaveBeenCalled();
-      expect(res.status).toHaveBeenCalledWith(200);
-      expect(res.json).toHaveBeenCalledWith({
-        data: [{ id: 1, nome: 'estabelecimentoTeste' }],
-        meta: {
-          total: 1,
-          page: 1,
-          pages: 1,
+
+      await EstabelecimentoController.createEstabelecimento(req, res);
+
+      expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
+        where: { nome: 'Estabelecimento Teste' },
+      });
+      expect(PrismaClient.prototype.estabelecimento.create).toHaveBeenCalledWith({
+        data: {
+          nome: 'Estabelecimento Teste',
+          codigoAcesso: '123456',
+          senha: expect.any(String), // O hash da senha será gerado
         },
       });
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+        estabelecimento: expect.any(Object),
+        token: expect.any(String),
+      }));
     });
 
-    it('Deve retornar erro se houver problema ao obter a lista de estabelecimentos', async () => {
-      req.query = { page: '1', limit: '10' };
+    it('deve retornar erro se o estabelecimento já existir', async () => {
+      req.body = {
+        nome: 'Estabelecimento Teste',
+        codigoAcesso: '123456',
+        senha: 'senha123',
+      };
 
-      PrismaClient.prototype.estabelecimento.findMany.mockRejectedValue(new Error('Erro'));
+      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue({
+        id: 1,
+        nome: 'Estabelecimento Teste',
+      });
 
-      await EstabelecimentoController.getEstabelecimentos(req, res);
+      await EstabelecimentoController.createEstabelecimento(req, res);
+
+      expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
+        where: { nome: 'Estabelecimento Teste' },
+      });
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Estabelecimento já existe' });
+    });
+
+    it('deve retornar erro ao falhar na criação do estabelecimento', async () => {
+      req.body = {
+        nome: 'Estabelecimento Teste',
+        codigoAcesso: '123456',
+        senha: 'senha123',
+      };
+
+      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null); // Nenhum estabelecimento encontrado
+      PrismaClient.prototype.estabelecimento.create.mockRejectedValue(new Error('Erro ao criar estabelecimento'));
+
+      await EstabelecimentoController.createEstabelecimento(req, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao obter estabelecimentos' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao criar estabelecimento' });
     });
   });
 });

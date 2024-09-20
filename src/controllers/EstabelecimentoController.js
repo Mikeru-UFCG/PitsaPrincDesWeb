@@ -138,6 +138,49 @@ exports.aprovarEntregador = async (req, res) => {
   }
 };
 
+// Registra um novo estabelecimento
+exports.createEstabelecimento = async (req, res) => {
+  const { nome, codigoAcesso, senha } = req.body;
+
+  try {
+    // Verifica se o estabelecimento já existe
+    const existingEstabelecimento = await prisma.estabelecimento.findUnique({
+      where: { nome },
+    });
+
+    if (existingEstabelecimento) {
+      return res.status(400).json({ error: 'Estabelecimento já existe' });
+    }
+
+    // Criptografa a senha antes de salvar
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // Cria um novo estabelecimento
+    const estabelecimento = await prisma.estabelecimento.create({
+      data: {
+        nome,
+        codigoAcesso,
+        senha: hashedPassword,
+      },
+    });
+
+    // Gera um token para o novo estabelecimento
+    const token = generateToken(estabelecimento);
+
+    res.status(201).json({
+      estabelecimento: {
+        id: estabelecimento.id,
+        nome: estabelecimento.nome,
+        codigoAcesso: estabelecimento.codigoAcesso,
+      },
+      token,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao criar estabelecimento' });
+  }
+};
+
+
 // Autentica um estabelecimento com nome e código de acesso
 exports.loginEstabelecimento = async (req, res) => {
   const { nome, codigoAcesso } = req.body;
