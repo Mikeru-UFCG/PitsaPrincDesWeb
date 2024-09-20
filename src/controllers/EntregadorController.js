@@ -74,6 +74,29 @@ class EntregadorController {
     }
   }
 
+  // Método para solicitar associação com um estabelecimento
+static async solicitarAssociacao(req, res) {
+  try {
+    const { idEstabelecimento } = req.body; // O ID do estabelecimento que o entregador deseja se associar
+
+    // Verifica se o entregador autenticado está fazendo a solicitação
+    const entregadorId = req.user.id;
+
+    // Cria uma nova solicitação de associação
+    const solicitacao = await prisma.associacao.create({
+      data: {
+        entregadorId: entregadorId,
+        estabelecimentosId: idEstabelecimento,
+        status: 'PENDENTE', // Define o status inicial como PENDENTE
+      },
+    });
+
+    res.status(201).json(solicitacao);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao solicitar associação' });
+  }
+}
+
   // Definir a disponibilidade do entregador para fazer entregas
   static async definirDisponibilidade(req, res) {
     try {
@@ -91,6 +114,33 @@ class EntregadorController {
       res.status(200).json(entregador);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao definir disponibilidade' });
+    }
+  }
+
+  static async getEntregadores(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1; // Página atual
+      const limit = parseInt(req.query.limit) || 10; // Itens por página
+      const skip = (page - 1) * limit;
+  
+      const entregadores = await prisma.entregador.findMany({
+        skip: skip,
+        take: limit,
+      });
+  
+      // Contar o total de entregadores para fornecer informações sobre a paginação
+      const totalEntregadores = await prisma.entregador.count();
+  
+      res.status(200).json({
+        data: entregadores,
+        meta: {
+          total: totalEntregadores,
+          page,
+          pages: Math.ceil(totalEntregadores / limit),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao obter entregadores' });
     }
   }
 
@@ -150,33 +200,6 @@ class EntregadorController {
       res.status(200).json({ entregador, token });
     } catch (error) {
       res.status(500).json({ error: 'Erro ao fazer login' });
-    }
-  }
-
-  static async getEntregadores(req, res) {
-    try {
-      const page = parseInt(req.query.page) || 1; // Página atual
-      const limit = parseInt(req.query.limit) || 10; // Itens por página
-      const skip = (page - 1) * limit;
-  
-      const entregadores = await prisma.entregador.findMany({
-        skip: skip,
-        take: limit,
-      });
-  
-      // Contar o total de entregadores para fornecer informações sobre a paginação
-      const totalEntregadores = await prisma.entregador.count();
-  
-      res.status(200).json({
-        data: entregadores,
-        meta: {
-          total: totalEntregadores,
-          page,
-          pages: Math.ceil(totalEntregadores / limit),
-        },
-      });
-    } catch (error) {
-      res.status(500).json({ error: 'Erro ao obter entregadores' });
     }
   }
 

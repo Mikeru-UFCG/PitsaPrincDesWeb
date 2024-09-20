@@ -103,6 +103,34 @@ router.get('/entregadores/:id', authMiddleware(['estabelecimento']), EntregadorC
 
 /**
  * @swagger
+ * /entregadores/solicitar-associacao:
+ *   post:
+ *     summary: Solicita associação a um estabelecimento
+ *     tags: [Entregadores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idEstabelecimento:
+ *                 type: integer
+ *                 description: ID do estabelecimento para o qual o entregador deseja se associar
+ *             required:
+ *               - idEstabelecimento
+ *     responses:
+ *       201:
+ *         description: Solicitação de associação criada com sucesso
+ *       400:
+ *         description: Dados inválidos
+ *       500:
+ *         description: Erro ao solicitar associação
+ */
+router.post('/entregadores/solicitar-associacao', authMiddleware(['entregador']), EntregadorController.solicitarAssociacao);
+
+/**
+ * @swagger
  * /entregadores/{id}/disponibilidade:
  *   put:
  *     summary: Define a disponibilidade do entregador
