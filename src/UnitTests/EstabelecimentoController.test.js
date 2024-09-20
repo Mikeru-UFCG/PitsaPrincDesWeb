@@ -31,6 +31,8 @@ describe('EstabelecimentoController', () => {
     };
   });
 
+  // Métodos de teste executados a seguir:
+
   describe('createEstabelecimento', () => {
     it('Deve criar um novo estabelecimento e retornar um token JWT', async () => {
       req.body = {
