@@ -17,6 +17,30 @@ class ClienteController {
     }
   }
 
+  static async getCliente(req, res) {
+    try {
+      const { id } = req.params;
+  
+      // Verifica se o cliente está tentando acessar seu próprio perfil
+      if (parseInt(id) !== req.user.id) {
+        return res.status(403).json({ error: 'Acesso negado' });
+      }
+  
+      const cliente = await prisma.cliente.findUnique({
+        where: { id: parseInt(id) },
+      });
+  
+      // Verifica se o cliente foi encontrado
+      if (!cliente) {
+        return res.status(404).json({ error: 'Cliente não encontrado' });
+      }
+  
+      res.status(200).json(cliente);
+    } catch (error) {
+      res.status(500).json({ error: 'Erro ao obter cliente' });
+    }
+  }
+
   static async updateCliente(req, res) {
     try {
       const { id } = req.params;
@@ -51,24 +75,6 @@ class ClienteController {
       res.status(204).end();
     } catch (error) {
       res.status(500).json({ error: 'Erro ao excluir cliente' });
-    }
-  }
-
-  static async getCliente(req, res) {
-    try {
-      const { id } = req.params;
-      
-      // Verifica se o cliente está tentando acessar seu próprio perfil
-      if (parseInt(id) !== req.user.id) {
-        return res.status(403).json({ error: 'Acesso negado' });
-      }
-
-      const cliente = await prisma.cliente.findUnique({
-        where: { id: parseInt(id) },
-      });
-      res.status(200).json(cliente);
-    } catch (error) {
-      res.status(500).json({ error: 'Erro ao obter cliente' });
     }
   }
 
