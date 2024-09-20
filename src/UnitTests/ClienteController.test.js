@@ -38,13 +38,15 @@ jest.mock('jsonwebtoken', () => ({
   sign: jest.fn(),
 }));
 
+const ClienteController = require('../controllers/ClienteController'); // Ajuste o caminho conforme necessário
 const prisma = new PrismaClient();
-const ClienteController = require('../controllers/ClienteController'); // Certifique-se que o caminho está correto
 
 describe('ClienteController', () => {
   beforeEach(() => {
     jest.clearAllMocks(); // Limpa os mocks antes de cada teste
   });
+
+  // Métodos de teste executados a seguir:
 
   // Testando o método de criação de cliente
   describe('createCliente', () => {
@@ -242,24 +244,7 @@ describe('ClienteController', () => {
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao atualizar cliente' });
     });
-  });
 
-  const { PrismaClient } = require('@prisma/client');
-  const ClienteController = require('../controllers/ClienteController'); // Certifique-se que o caminho está correto
-
-  // Mock do Prisma Client
-  jest.mock('@prisma/client', () => {
-    const prismaMock = {
-      cliente: {
-        delete: jest.fn(),
-      },
-    };
-    return { PrismaClient: jest.fn(() => prismaMock) };
-  });
-
-  const prisma = new PrismaClient();
-
-  describe('ClienteController', () => {
     describe('deleteCliente', () => {
       beforeEach(() => {
         // Limpa todos os mocks antes de cada teste

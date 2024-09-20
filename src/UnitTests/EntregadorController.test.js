@@ -41,6 +41,8 @@ const prisma = new PrismaClient();
 
 describe('EntregadorController', () => {
 
+  // Métodos de teste executados a seguir:
+
   describe('createEntregador', () => {
     it('deve criar um novo entregador com sucesso', async () => {
       const req = {
