@@ -431,7 +431,7 @@ describe('EntregadorController', () => {
       const req = {
         body: {
           nome: 'Novo Entregador',
-          senha: 'senha123',
+          codigoAcesso: 'senha123', // Substituindo senha por codigoAcesso
           placaVeiculo: 'ABC-1234',
           tipoVeiculo: 'moto',
           corVeiculo: 'vermelho',
@@ -441,7 +441,7 @@ describe('EntregadorController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador
       prisma.entregador.findUnique.mockResolvedValue(null);
       // Mock do hash da senha
@@ -451,15 +451,15 @@ describe('EntregadorController', () => {
       prisma.entregador.create.mockResolvedValue(entregador);
       // Mock da geração do token
       jwt.sign = jest.fn().mockReturnValue('tokenGerado');
-
+  
       await EntregadorController.register(req, res);
-
+  
       expect(prisma.entregador.findUnique).toHaveBeenCalledWith({ where: { nome: 'Novo Entregador' } });
-      expect(bcrypt.hash).toHaveBeenCalledWith('senha123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('senha123', 10); // Substituição feita
       expect(prisma.entregador.create).toHaveBeenCalledWith({
         data: {
           nome: 'Novo Entregador',
-          senha: 'hashedPassword',
+          codigoAcesso: 'hashedPassword',
           placaVeiculo: 'ABC-1234',
           tipoVeiculo: 'moto',
           corVeiculo: 'vermelho',
@@ -473,12 +473,12 @@ describe('EntregadorController', () => {
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ entregador, token: 'tokenGerado' });
     });
-
+  
     it('deve retornar erro se o entregador já existir', async () => {
       const req = {
         body: {
           nome: 'Entregador Existente',
-          senha: 'senha123',
+          codigoAcesso: '123456',
           placaVeiculo: 'ABC-1234',
           tipoVeiculo: 'moto',
           corVeiculo: 'vermelho',
@@ -488,22 +488,22 @@ describe('EntregadorController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador já existente
       const existingDeliverer = { id: 1, nome: 'Entregador Existente' };
       prisma.entregador.findUnique.mockResolvedValue(existingDeliverer);
-
+  
       await EntregadorController.register(req, res);
-
+  
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: 'Entregador já existe' });
     });
-
+  
     it('deve retornar erro ao falhar na criação do entregador', async () => {
       const req = {
         body: {
           nome: 'Novo Entregador',
-          senha: 'senha123',
+          codigoAcesso: '123456',
           placaVeiculo: 'ABC-1234',
           tipoVeiculo: 'moto',
           corVeiculo: 'vermelho',
@@ -513,46 +513,46 @@ describe('EntregadorController', () => {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador
       prisma.entregador.findUnique.mockResolvedValue(null);
       // Mock do hash da senha
       bcrypt.hash.mockResolvedValue('hashedPassword');
       // Mock da falha na criação do entregador
       prisma.entregador.create.mockRejectedValue(new Error('Erro ao criar entregador'));
-
+  
       await EntregadorController.register(req, res);
-
+  
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao registrar entregador' });
     });
   });
-
+  
   describe('login', () => {
     it('deve fazer login com sucesso', async () => {
       const req = {
         body: {
           nome: 'Entregador Existente',
-          senha: 'senha123',
+          codigoAcesso: '123456', // Alteração feita aqui
         },
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador
-      const entregador = { id: 1, nome: 'Entregador Existente', senha: 'hashedPassword' };
+      const entregador = { id: 1, nome: 'Entregador Existente', codigoAcesso: 'hashedPassword' };
       prisma.entregador.findUnique.mockResolvedValue(entregador);
       // Mock da verificação da senha
       bcrypt.compare.mockResolvedValue(true);
       // Mock da geração do token
       jwt.sign = jest.fn().mockReturnValue('tokenGerado');
-
+  
       await EntregadorController.login(req, res);
-
+  
       expect(prisma.entregador.findUnique).toHaveBeenCalledWith({ where: { nome: 'Entregador Existente' } });
-      expect(bcrypt.compare).toHaveBeenCalledWith('senha123', 'hashedPassword');
+      expect(bcrypt.compare).toHaveBeenCalledWith('123456', 'hashedPassword'); // Alteração feita aqui
       expect(jwt.sign).toHaveBeenCalledWith(
         { id: entregador.id, role: 'entregador', nome: 'Entregador Existente' },
         process.env.JWT_SECRET || 'SECRET_KEY',
@@ -561,72 +561,77 @@ describe('EntregadorController', () => {
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ entregador, token: 'tokenGerado' });
     });
-
-    it('deve retornar erro se o nome ou senha estiverem incorretos', async () => {
+  
+    it('deve retornar erro se o nome ou código de acesso estiverem incorretos', async () => {
       const req = {
         body: {
           nome: 'Entregador Inexistente',
-          senha: 'senhaErrada',
+          codigoAcesso: 'codigoAcessoErrado',
         },
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador não encontrado
       prisma.entregador.findUnique.mockResolvedValue(null);
-
+  
       await EntregadorController.login(req, res);
-
+  
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou senha incorretos' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou código de acesso incorretos' });
     });
-
+  
     it('deve retornar erro ao falhar na verificação da senha', async () => {
       const req = {
         body: {
           nome: 'Entregador Existente',
-          senha: 'senhaErrada',
+          codigoAcesso: 'codigoAcessoErrado',
         },
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador
-      const entregador = { id: 1, nome: 'Entregador Existente', senha: 'hashedPassword' };
+      const entregador = { id: 1, nome: 'Entregador Existente', codigoAcesso: 'hashedPassword' };
       prisma.entregador.findUnique.mockResolvedValue(entregador);
       // Mock da verificação da senha como falsa
       bcrypt.compare.mockResolvedValue(false);
-
+  
       await EntregadorController.login(req, res);
-
+  
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou senha incorretos' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou código de acesso incorretos' });
     });
-
+  
     it('deve retornar erro ao falhar no login', async () => {
       const req = {
         body: {
           nome: 'Entregador Existente',
-          senha: 'senha123',
+          codigoAcesso: '123456', // Alteração feita aqui
         },
       };
       const res = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
       };
-
+  
       // Mock do retorno de busca do entregador
-      prisma.entregador.findUnique.mockRejectedValue(new Error('Erro ao buscar entregador'));
-
+      const entregador = { id: 1, nome: 'Entregador Existente', codigoAcesso: 'hashedPassword' };
+      prisma.entregador.findUnique.mockResolvedValue(entregador);
+      // Mock da falha na comparação da senha
+      bcrypt.compare.mockRejectedValue(new Error('Erro ao comparar'));
+  
       await EntregadorController.login(req, res);
-
+  
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao fazer login' });
     });
   });
+  
+  
 
 });

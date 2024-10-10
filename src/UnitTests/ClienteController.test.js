@@ -767,7 +767,7 @@ describe('ClienteController', () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senha123',
+          codigoAcesso: '123456',
           endereco: 'Rua Teste, 123',
         },
       };
@@ -779,7 +779,7 @@ describe('ClienteController', () => {
       // Mock do cliente existente
       prisma.cliente.findUnique.mockResolvedValue(null);
 
-      // Mock do hash da senha
+      // Mock do hash do código de acesso
       const hashedPassword = 'hashedPassword';
       bcrypt.hash.mockResolvedValue(hashedPassword);
 
@@ -794,9 +794,9 @@ describe('ClienteController', () => {
       await ClienteController.register(req, res);
 
       expect(prisma.cliente.findUnique).toHaveBeenCalledWith({ where: { nome: 'Cliente Teste' } });
-      expect(bcrypt.hash).toHaveBeenCalledWith('senha123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('123456', 10);
       expect(prisma.cliente.create).toHaveBeenCalledWith({
-        data: { nome: 'Cliente Teste', senha: hashedPassword, endereco: 'Rua Teste, 123' },
+        data: { nome: 'Cliente Teste', codigoAcesso: hashedPassword, endereco: 'Rua Teste, 123' },
       });
       expect(jwt.sign).toHaveBeenCalledWith({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -807,7 +807,7 @@ describe('ClienteController', () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senha123',
+          codigoAcesso: '123456',
           endereco: 'Rua Teste, 123',
         },
       };
@@ -830,7 +830,7 @@ describe('ClienteController', () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senha123',
+          codigoAcesso: '123456',
           endereco: 'Rua Teste, 123',
         },
       };
@@ -859,7 +859,7 @@ describe('ClienteController', () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senha123',
+          codigoAcesso: '123456',
         },
       };
       const res = {
@@ -868,10 +868,10 @@ describe('ClienteController', () => {
       };
 
       // Mock do retorno do cliente
-      const cliente = { id: 1, nome: 'Cliente Teste', senha: 'hashedPassword' };
+      const cliente = { id: 1, nome: 'Cliente Teste', codigoAcesso: 'hashedPassword' };
       prisma.cliente.findUnique.mockResolvedValue(cliente);
 
-      // Mock da comparação da senha
+      // Mock da comparação do código de acesso
       bcrypt.compare.mockResolvedValue(true);
 
       // Mock do token JWT
@@ -881,17 +881,17 @@ describe('ClienteController', () => {
       await ClienteController.login(req, res);
 
       expect(prisma.cliente.findUnique).toHaveBeenCalledWith({ where: { nome: 'Cliente Teste' } });
-      expect(bcrypt.compare).toHaveBeenCalledWith('senha123', cliente.senha);
+      expect(bcrypt.compare).toHaveBeenCalledWith('123456', cliente.codigoAcesso);
       expect(jwt.sign).toHaveBeenCalledWith({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ cliente, token });
     });
 
-    it('deve retornar erro se o nome ou senha estiverem incorretos', async () => {
+    it('deve retornar erro se o nome ou código de acesso estiverem incorretos', async () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senhaErrada',
+          codigoAcesso: 'codigoAcessoErrado',
         },
       };
       const res = {
@@ -900,23 +900,23 @@ describe('ClienteController', () => {
       };
 
       // Mock do retorno do cliente
-      const cliente = { id: 1, nome: 'Cliente Teste', senha: 'hashedPassword' };
+      const cliente = { id: 1, nome: 'Cliente Teste', codigoAcesso: 'hashedPassword' };
       prisma.cliente.findUnique.mockResolvedValue(cliente);
 
-      // Mock da comparação da senha
+      // Mock da comparação do código de acesso
       bcrypt.compare.mockResolvedValue(false);
 
       await ClienteController.login(req, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou senha incorretos' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Nome ou código de acesso incorretos' });
     });
 
     it('deve retornar um erro ao falhar no login', async () => {
       const req = {
         body: {
           nome: 'Cliente Teste',
-          senha: 'senha123',
+          codigoAcesso: '123456',
         },
       };
       const res = {

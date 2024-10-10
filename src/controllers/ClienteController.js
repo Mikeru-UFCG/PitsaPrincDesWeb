@@ -202,52 +202,52 @@ class ClienteController {
 
   static async register(req, res) {
     try {
-      const { nome, senha, endereco } = req.body;
+        const { nome, codigoAcesso, endereco } = req.body;
 
-      // Verifica se o cliente já existe
-      const existingClient = await prisma.cliente.findUnique({
-        where: { nome }
-      });
-      if (existingClient) {
-        return res.status(400).json({ error: 'Cliente já existe' });
-      }
+        // Verifica se o cliente já existe
+        const existingClient = await prisma.cliente.findUnique({
+            where: { nome }
+        });
+        if (existingClient) {
+            return res.status(400).json({ error: 'Cliente já existe' });
+        }
 
-      // Cria um hash da senha
-      const hashedPassword = await bcrypt.hash(senha, 10);
+        // Cria um hash do código de acesso
+        const hashedPassword = await bcrypt.hash(codigoAcesso, 10);
 
-      // Cria o novo cliente
-      const cliente = await prisma.cliente.create({
-        data: { nome, senha: hashedPassword, endereco },
-      });
+        // Cria o novo cliente
+        const cliente = await prisma.cliente.create({
+            data: { nome, codigoAcesso: hashedPassword, endereco },
+        });
 
-      // Gera um token JWT
-      const token = jwt.sign({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
+        // Gera um token JWT
+        const token = jwt.sign({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
 
-      res.status(201).json({ cliente, token });
+        res.status(201).json({ cliente, token });
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao registrar cliente' });
+        res.status(500).json({ error: 'Erro ao registrar cliente' });
     }
-  }
+}
 
-  static async login(req, res) {
+static async login(req, res) {
     try {
-      const { nome, senha } = req.body;
+        const { nome, codigoAcesso } = req.body;
 
-      // Busca o cliente
-      const cliente = await prisma.cliente.findUnique({
-        where: { nome }
-      });
+        // Busca o cliente
+        const cliente = await prisma.cliente.findUnique({
+            where: { nome }
+        });
 
-      if (!cliente || !(await bcrypt.compare(senha, cliente.senha))) {
-        return res.status(401).json({ error: 'Nome ou senha incorretos' });
-      }
+        if (!cliente || !(await bcrypt.compare(codigoAcesso, cliente.codigoAcesso))) {
+            return res.status(401).json({ error: 'Nome ou código de acesso incorretos' });
+        }
 
-      // Gera um token JWT
-      const token = jwt.sign({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
+        // Gera um token JWT
+        const token = jwt.sign({ id: cliente.id }, 'SECRET_KEY', { expiresIn: '1h' });
 
-      res.status(200).json({ cliente, token });
+        res.status(200).json({ cliente, token });
     } catch (error) {
-      res.status(500).json({ error: 'Erro ao fazer login' });
+        res.status(500).json({ error: 'Erro ao fazer login' });
     }
   }
 }

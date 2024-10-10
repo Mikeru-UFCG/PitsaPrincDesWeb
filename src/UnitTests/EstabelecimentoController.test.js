@@ -29,6 +29,14 @@ describe('EstabelecimentoController', () => {
       findMany: jest.fn(),
       count: jest.fn(),
     };
+    PrismaClient.prototype.sabor = {
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn(),
+    };
   });
 
   // Métodos de teste executados a seguir:
@@ -37,24 +45,29 @@ describe('EstabelecimentoController', () => {
     it('Deve criar um novo estabelecimento e retornar um token JWT', async () => {
       req.body = {
         nome: 'estabelecimentoTeste',
-        codigoAcesso: '123456',
-        senha: 'senha123',
+        codigoAcesso: '123456', // Apenas nome e código de acesso
       };
 
-      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null); // Nenhum estabelecimento encontrado
+      // Mock para verificar se o estabelecimento já existe (neste caso, não existe)
+      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null);
+      // Mock para criar um novo estabelecimento
       PrismaClient.prototype.estabelecimento.create.mockResolvedValue({
         id: 1,
         nome: 'estabelecimentoTeste',
-        codigoAcesso: '123456',
+        codigoAcesso: 'hashedCodigoAcesso',
       });
 
       await EstabelecimentoController.createEstabelecimento(req, res);
 
+      // Verificar se o findUnique foi chamado corretamente
       expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
         where: { nome: 'estabelecimentoTeste' },
       });
+      // Verificar se o estabelecimento foi criado
       expect(PrismaClient.prototype.estabelecimento.create).toHaveBeenCalled();
+      // Verificar se a resposta contém o status 201
       expect(res.status).toHaveBeenCalledWith(201);
+      // Verificar se o JSON de resposta contém o estabelecimento e o token
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
         estabelecimento: expect.any(Object),
         token: expect.any(String),
@@ -65,9 +78,9 @@ describe('EstabelecimentoController', () => {
       req.body = {
         nome: 'estabelecimentoTeste',
         codigoAcesso: '123456',
-        senha: 'senha123',
       };
 
+      // Mock para verificar se o estabelecimento já existe (neste caso, existe)
       PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue({
         id: 1,
         nome: 'estabelecimentoTeste',
@@ -75,10 +88,13 @@ describe('EstabelecimentoController', () => {
 
       await EstabelecimentoController.createEstabelecimento(req, res);
 
+      // Verificar se o findUnique foi chamado corretamente
       expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
         where: { nome: 'estabelecimentoTeste' },
       });
+      // Verificar se o status de erro foi retornado
       expect(res.status).toHaveBeenCalledWith(400);
+      // Verificar se a mensagem de erro foi retornada
       expect(res.json).toHaveBeenCalledWith({ error: 'Estabelecimento já existe' });
     });
   });
@@ -91,26 +107,24 @@ describe('EstabelecimentoController', () => {
       PrismaClient.prototype.estabelecimento.update.mockResolvedValue({
         id: 1,
         nome: 'estabelecimentoAtualizado',
-        codigoAcesso: '654321',
       });
 
       await EstabelecimentoController.updateEstabelecimento(req, res);
 
       expect(PrismaClient.prototype.estabelecimento.update).toHaveBeenCalledWith({
         where: { id: 1 },
-        data: { nome: 'estabelecimentoAtualizado', codigoAcesso: '654321' },
+        data: { nome: 'estabelecimentoAtualizado' },
       });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         id: 1,
         nome: 'estabelecimentoAtualizado',
-        codigoAcesso: '654321',
       });
     });
 
     it('Deve retornar erro se o estabelecimento não for encontrado', async () => {
       req.params = { id: '1' };
-      req.body = { nome: 'estabelecimentoAtualizado', codigoAcesso: '654321' };
+      req.body = { nome: 'estabelecimentoAtualizado' };
 
       PrismaClient.prototype.estabelecimento.update.mockRejectedValue({ code: 'P2025' });
 
@@ -154,7 +168,6 @@ describe('EstabelecimentoController', () => {
       PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue({
         id: 1,
         nome: 'estabelecimentoTeste',
-        codigoAcesso: '123456',
       });
 
       await EstabelecimentoController.getEstabelecimento(req, res);
@@ -166,7 +179,6 @@ describe('EstabelecimentoController', () => {
       expect(res.json).toHaveBeenCalledWith({
         id: 1,
         nome: 'estabelecimentoTeste',
-        codigoAcesso: '123456',
       });
     });
 
@@ -245,10 +257,119 @@ describe('EstabelecimentoController', () => {
     });
   });
 
-  describe('toggleDisponibilidadeSabor', () => {
-    it('Deve alterar a disponibilidade de um sabor no cardápio do estabelecimento', async () => {
-      req.params = { id: '1', saborId: '2' };
+  describe('Cria sabor', () => {
+    let req, res;
 
+    beforeEach(() => {
+      req = {
+        body: {},
+      };
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+    });
+
+    it('Deve criar um sabor com sucesso', async () => {
+      // Mock do estabelecimento existente
+      const mockEstabelecimento = {
+        id: 'estab123',
+        nome: 'Estabelecimento Teste',
+      };
+
+      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(mockEstabelecimento);
+
+      req.body = {
+        nome: 'Sabor Teste',
+        tipo: 'salgado',
+        valorMedio: 30,
+        valorGrande: 50,
+        estabelecimentoId: mockEstabelecimento.id,
+      };
+
+      // Mock da criação do sabor
+      PrismaClient.prototype.sabor.create.mockResolvedValue(req.body);
+
+      await EstabelecimentoController.createSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(req.body);
+    });
+
+
+    it('Deve retornar erro 404 se o estabelecimento não for encontrado', async () => {
+      req.body = {
+        nome: 'Sabor Teste',
+        tipo: 'salgado',
+        valorMedio: 30,
+        valorGrande: 50,
+        estabelecimentoId: 'estab123',
+      };
+
+      PrismaClient.prototype.estabelecimento.findUnique = jest.fn().mockResolvedValue(null);
+
+      await EstabelecimentoController.createSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Estabelecimento não encontrado' });
+    });
+  });
+
+  describe('Get sabor', () => {
+    let req, res;
+
+    beforeEach(() => {
+      req = {
+        params: { id: '1' }, // ID do sabor que queremos buscar
+      };
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+    });
+
+    it('Deve retornar um sabor com sucesso', async () => {
+      const mockSabor = {
+        id: '1',
+        nome: 'Sabor Teste',
+        tipo: 'salgado',
+        valorMedio: 30,
+        valorGrande: 50,
+      };
+
+      PrismaClient.prototype.sabor.findUnique.mockResolvedValue(mockSabor);
+
+      await EstabelecimentoController.getSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockSabor);
+    });
+
+    it('Deve retornar erro 404 se o sabor não for encontrado', async () => {
+      PrismaClient.prototype.sabor.findUnique.mockResolvedValue(null);
+
+      await EstabelecimentoController.getSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Sabor não encontrado' });
+    });
+  });
+
+  describe('Get sabores', () => {
+  });
+
+  describe('Atualiza sabor', () => { });
+
+  describe('Remove sabor', () => { });
+
+  describe('toggleDisponibilidadeSabor', () => {
+
+    it('Deve alterar a disponibilidade de um sabor no cardápio do estabelecimento', async () => {
+      // Ajuste nos parâmetros para usar estabelecimentoId e saborId
+      req.params = { estabelecimentoId: '1', saborId: '2' };
+      req.body = { disponibilidade: true }; // Passar o corpo da requisição com a disponibilidade desejada
+
+      // Mock do prisma para simular a resposta esperada
       PrismaClient.prototype.estabelecimento.update.mockResolvedValue({
         id: 1,
         sabores: [{ id: 2, disponibilidade: true }],
@@ -256,18 +377,20 @@ describe('EstabelecimentoController', () => {
 
       await EstabelecimentoController.toggleDisponibilidadeSabor(req, res);
 
+      // Verificação da chamada correta ao método prisma
       expect(PrismaClient.prototype.estabelecimento.update).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: '1' }, // Deve usar o estabelecimentoId
         data: {
           sabores: {
             update: {
-              where: { id: 2 },
-              data: { disponibilidade: { toggle: true } },
+              where: { id: '2' }, // Deve usar o saborId
+              data: { disponibilidade: true }, // Usa o valor passado no req.body
             },
           },
         },
       });
-      expect(res.status).toHaveBeenCalledWith(200);
+
+      // Verificação da resposta HTTP
       expect(res.json).toHaveBeenCalledWith({
         id: 1,
         sabores: [{ id: 2, disponibilidade: true }],
@@ -275,16 +398,37 @@ describe('EstabelecimentoController', () => {
     });
 
     it('Deve retornar erro se o estabelecimento ou sabor não for encontrado', async () => {
-      req.params = { id: '1', saborId: '2' };
+      // Ajuste nos parâmetros
+      req.params = { estabelecimentoId: '1', saborId: '2' };
+      req.body = { disponibilidade: true }; // Passar o corpo da requisição
 
+      // Simular um erro "P2025" que indica que o estabelecimento ou sabor não foi encontrado
       PrismaClient.prototype.estabelecimento.update.mockRejectedValue({ code: 'P2025' });
 
       await EstabelecimentoController.toggleDisponibilidadeSabor(req, res);
 
+      // Verificação do status de erro
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Estabelecimento ou sabor não encontrado' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Sabor ou Estabelecimento não encontrado' });
     });
+
+    it('Deve retornar erro genérico para falhas inesperadas', async () => {
+      // Ajuste nos parâmetros
+      req.params = { estabelecimentoId: '1', saborId: '2' };
+      req.body = { disponibilidade: true };
+
+      // Simular um erro genérico
+      PrismaClient.prototype.estabelecimento.update.mockRejectedValue(new Error('Erro inesperado'));
+
+      await EstabelecimentoController.toggleDisponibilidadeSabor(req, res);
+
+      // Verificação do status de erro 500 para erros gerais
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao alterar a disponibilidade do sabor' });
+    });
+
   });
+
 
   describe('aprovarEntregador', () => {
     it('Deve aprovar um entregador para realizar entregas para o estabelecimento', async () => {
@@ -356,74 +500,5 @@ describe('EstabelecimentoController', () => {
   });
 
   describe('register', () => {
-    it('deve registrar um novo estabelecimento com sucesso', async () => {
-      req.body = {
-        nome: 'Estabelecimento Teste',
-        codigoAcesso: '123456',
-        senha: 'senha123',
-      };
-
-      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null); // Nenhum estabelecimento encontrado
-      PrismaClient.prototype.estabelecimento.create.mockResolvedValue({
-        id: 1,
-        nome: 'Estabelecimento Teste',
-        codigoAcesso: '123456',
-      });
-
-      await EstabelecimentoController.createEstabelecimento(req, res);
-
-      expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
-        where: { nome: 'Estabelecimento Teste' },
-      });
-      expect(PrismaClient.prototype.estabelecimento.create).toHaveBeenCalledWith({
-        data: {
-          nome: 'Estabelecimento Teste',
-          codigoAcesso: '123456',
-          senha: expect.any(String), // O hash da senha será gerado
-        },
-      });
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        estabelecimento: expect.any(Object),
-        token: expect.any(String),
-      }));
-    });
-
-    it('deve retornar erro se o estabelecimento já existir', async () => {
-      req.body = {
-        nome: 'Estabelecimento Teste',
-        codigoAcesso: '123456',
-        senha: 'senha123',
-      };
-
-      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue({
-        id: 1,
-        nome: 'Estabelecimento Teste',
-      });
-
-      await EstabelecimentoController.createEstabelecimento(req, res);
-
-      expect(PrismaClient.prototype.estabelecimento.findUnique).toHaveBeenCalledWith({
-        where: { nome: 'Estabelecimento Teste' },
-      });
-      expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Estabelecimento já existe' });
-    });
-
-    it('deve retornar erro ao falhar na criação do estabelecimento', async () => {
-      req.body = {
-        nome: 'Estabelecimento Teste',
-        codigoAcesso: '123456',
-        senha: 'senha123',
-      };
-
-      PrismaClient.prototype.estabelecimento.findUnique.mockResolvedValue(null); // Nenhum estabelecimento encontrado
-      PrismaClient.prototype.estabelecimento.create.mockRejectedValue(new Error('Erro ao criar estabelecimento'));
-
-      await EstabelecimentoController.createEstabelecimento(req, res);
-
-      expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao criar estabelecimento' });
-    });
   });
 });

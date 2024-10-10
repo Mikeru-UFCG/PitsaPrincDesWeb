@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-
+const SaborController = require('./SaborController');
 const prisma = new PrismaClient();
 
 // Função auxiliar para gerar tokens JWT
@@ -11,8 +11,10 @@ const generateToken = (estabelecimento) => {
 
 // Cria um novo estabelecimento
 exports.createEstabelecimento = async (req, res) => {
-  const { nome, codigoAcesso, senha } = req.body;
+  const { nome, codigoAcesso } = req.body; // Lê nome e código de acesso
+
   try {
+    // Verifica se o estabelecimento já existe
     const existingEstabelecimento = await prisma.estabelecimento.findUnique({
       where: { nome },
     });
@@ -21,18 +23,27 @@ exports.createEstabelecimento = async (req, res) => {
       return res.status(400).json({ error: 'Estabelecimento já existe' });
     }
 
-    const hashedPassword = await bcrypt.hash(senha, 10);
+    // Criptografa o código de acesso antes de salvar
+    const hashedCodigoAcesso = await bcrypt.hash(codigoAcesso, 10);
 
+    // Cria um novo estabelecimento
     const estabelecimento = await prisma.estabelecimento.create({
       data: {
         nome,
-        codigoAcesso,
-        senha: hashedPassword,
+        codigoAcesso: hashedCodigoAcesso, // Armazena o código de acesso criptografado
       },
     });
 
+    // Gera um token para o novo estabelecimento
     const token = generateToken(estabelecimento);
-    res.status(201).json({ estabelecimento, token });
+
+    res.status(201).json({
+      estabelecimento: {
+        id: estabelecimento.id,
+        nome: estabelecimento.nome,
+      },
+      token,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao criar estabelecimento' });
   }
@@ -41,12 +52,12 @@ exports.createEstabelecimento = async (req, res) => {
 // Atualiza um estabelecimento pelo ID
 exports.updateEstabelecimento = async (req, res) => {
   const { id } = req.params;
-  const { nome, codigoAcesso } = req.body;
+  const { nome } = req.body;
 
   try {
     const estabelecimento = await prisma.estabelecimento.update({
       where: { id: parseInt(id) },
-      data: { nome, codigoAcesso },
+      data: { nome },
     });
 
     res.status(200).json(estabelecimento);
@@ -95,27 +106,48 @@ exports.getEstabelecimento = async (req, res) => {
   }
 };
 
-// Altera a disponibilidade de um sabor no cardápio do estabelecimento
-exports.toggleDisponibilidadeSabor = async (req, res) => {
-  const { id, saborId } = req.params;
+// Função auxiliar para verificar se o estabelecimento existe
+const verificaEstabelecimentoExistente = async (estabelecimentoId) => {
+  const estabelecimento = await prisma.estabelecimento.findUnique({
+    where: { id: estabelecimentoId },
+  });
+  return estabelecimento;
+};
 
-  try {
-    const estabelecimento = await prisma.estabelecimento.update({
-      where: { id: parseInt(id) },
-      data: {
-        sabores: {
-          update: {
-            where: { id: parseInt(saborId) },
-            data: { disponibilidade: { toggle: true } },
-          },
-        },
-      },
-    });
+// Métodos CRUD para Sabores
+exports.createSabor = async (req, res) => {
+  const { estabelecimentoId } = req.body;
 
-    res.status(200).json(estabelecimento);
-  } catch (error) {
-    res.status(404).json({ error: 'Estabelecimento ou sabor não encontrado' });
+  // Verifica se o estabelecimento existe usando a função auxiliar
+  const estabelecimento = await verificaEstabelecimentoExistente(estabelecimentoId);
+
+  if (!estabelecimento) {
+    return res.status(404).json({ error: 'Estabelecimento não encontrado' });
   }
+
+  // Se o estabelecimento existir, chama o método de criação de sabor
+  return SaborController.createSabor(req, res);
+};
+
+exports.updateSabor = (req, res) => {
+  return SaborController.updateSabor(req, res);
+};
+
+exports.deleteSabor = (req, res) => {
+  return SaborController.deleteSabor(req, res);
+};
+
+exports.getSabor = (req, res) => {
+  return SaborController.getSabor(req, res);
+};
+
+exports.getSabores = (req, res) => {
+  return SaborController.getSabores(req, res);
+};
+
+// Altera a disponibilidade de um sabor no cardápio do estabelecimento
+exports.toggleDisponibilidadeSabor = (req, res) => {
+  return SaborController.toggleDisponibilidadeSabor(req, res);
 };
 
 // Aprova um entregador para realizar entregas para o estabelecimento
@@ -139,46 +171,6 @@ exports.aprovarEntregador = async (req, res) => {
 };
 
 // Registra um novo estabelecimento
-exports.createEstabelecimento = async (req, res) => {
-  const { nome, codigoAcesso, senha } = req.body;
-
-  try {
-    // Verifica se o estabelecimento já existe
-    const existingEstabelecimento = await prisma.estabelecimento.findUnique({
-      where: { nome },
-    });
-
-    if (existingEstabelecimento) {
-      return res.status(400).json({ error: 'Estabelecimento já existe' });
-    }
-
-    // Criptografa a senha antes de salvar
-    const hashedPassword = await bcrypt.hash(senha, 10);
-
-    // Cria um novo estabelecimento
-    const estabelecimento = await prisma.estabelecimento.create({
-      data: {
-        nome,
-        codigoAcesso,
-        senha: hashedPassword,
-      },
-    });
-
-    // Gera um token para o novo estabelecimento
-    const token = generateToken(estabelecimento);
-
-    res.status(201).json({
-      estabelecimento: {
-        id: estabelecimento.id,
-        nome: estabelecimento.nome,
-        codigoAcesso: estabelecimento.codigoAcesso,
-      },
-      token,
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar estabelecimento' });
-  }
-};
 
 
 // Autentica um estabelecimento com nome e código de acesso

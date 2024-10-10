@@ -103,30 +103,171 @@ router.get('/estabelecimentos/:id', authMiddleware(['estabelecimento']), Estabel
 
 /**
  * @swagger
- * /estabelecimentos/{id}/sabores/{saborId}/disponibilidade:
- *   put:
- *     summary: Altera a disponibilidade de um sabor no cardápio do estabelecimento
+ * tags:
+ *   name: Estabelecimentos
+ *   description: API para gerenciamento de estabelecimentos
+ */
+
+/**
+ * @swagger
+ * /estabelecimentos/{id}/sabores:
+ *   post:
+ *     summary: Adiciona um novo sabor ao cardápio do estabelecimento
  *     tags: [Estabelecimentos]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
+ *       - name: id
+ *         in: path
  *         required: true
  *         description: ID do estabelecimento
- *       - in: path
- *         name: saborId
  *         schema:
- *           type: integer
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Sabor'
+ *     responses:
+ *       201:
+ *         description: Sabor criado com sucesso
+ *       400:
+ *         description: Dados inválidos
+ */
+router.post('/estabelecimentos/:id/sabores', authMiddleware, EstabelecimentoController.createSabor);
+
+/**
+ * @swagger
+ * /estabelecimentos/{id}/sabores/{saborId}:
+ *   put:
+ *     summary: Atualiza as informações de um sabor no cardápio do estabelecimento
+ *     tags: [Estabelecimentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
  *         required: true
- *         description: ID do sabor
+ *         description: ID do estabelecimento
+ *         schema:
+ *           type: string
+ *       - name: saborId
+ *         in: path
+ *         required: true
+ *         description: ID do sabor a ser atualizado
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Sabor'
  *     responses:
  *       200:
- *         description: Disponibilidade do sabor alterada com sucesso
+ *         description: Sabor atualizado com sucesso
  *       404:
  *         description: Estabelecimento ou sabor não encontrado
  */
-router.put('/estabelecimentos/:id/sabores/:saborId/disponibilidade', authMiddleware(['estabelecimento']), EstabelecimentoController.toggleDisponibilidadeSabor);
+router.put('/estabelecimentos/:id/sabores/:saborId', authMiddleware, EstabelecimentoController.updateSabor);
+
+/**
+ * @swagger
+ * /estabelecimentos/{id}/sabores/{saborId}:
+ *   delete:
+ *     summary: Remove um sabor do cardápio do estabelecimento
+ *     tags: [Estabelecimentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID do estabelecimento
+ *         schema:
+ *           type: string
+ *       - name: saborId
+ *         in: path
+ *         required: true
+ *         description: ID do sabor a ser removido
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sabor removido com sucesso
+ *       404:
+ *         description: Estabelecimento ou sabor não encontrado
+ */
+router.delete('/estabelecimentos/:id/sabores/:saborId', authMiddleware, EstabelecimentoController.deleteSabor);
+
+/**
+ * @swagger
+ * /estabelecimentos/{id}/sabores:
+ *   get:
+ *     summary: Retorna todos os sabores do cardápio de um estabelecimento
+ *     tags: [Estabelecimentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID do estabelecimento
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de sabores retornada com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Sabor'
+ *       404:
+ *         description: Estabelecimento não encontrado
+ */
+router.get('/estabelecimentos/:id/sabores', authMiddleware, EstabelecimentoController.getSabores);
+
+/**
+ * @swagger
+ * /estabelecimentos/{id}/sabores/{saborId}/disponibilidade:
+ *   patch:
+ *     summary: Altera a disponibilidade de um sabor no cardápio do estabelecimento
+ *     tags: [Estabelecimentos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: ID do estabelecimento
+ *         schema:
+ *           type: string
+ *       - name: saborId
+ *         in: path
+ *         required: true
+ *         description: ID do sabor
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               disponibilidade:
+ *                 type: boolean
+ *                 description: Nova disponibilidade do sabor
+ *     responses:
+ *       200:
+ *         description: Disponibilidade alterada com sucesso
+ *       404:
+ *         description: Estabelecimento ou sabor não encontrado
+ */
+router.patch('/estabelecimentos/:id/sabores/:saborId/disponibilidade', authMiddleware, EstabelecimentoController.toggleDisponibilidadeSabor);
 
 /**
  * @swagger
