@@ -58,9 +58,15 @@ class SaborController {
 
   static async getSabores(req, res) {
     try {
+      const { estabelecimentoId } = req.query; // Obtém o estabelecimentoId da query
       const sabores = await prisma.sabor.findMany({
-        where: { estabelecimentoId: parseInt(req.query.estabelecimentoId) },
+        where: { estabelecimentoId: parseInt(estabelecimentoId) }, // Usa o estabelecimentoId para buscar sabores
       });
+      
+      if (!sabores.length) {
+        return res.status(404).json({ error: 'Nenhum sabor encontrado para este estabelecimento' });
+      }
+      
       res.status(200).json(sabores);
     } catch (error) {
       res.status(500).json({ error: 'Erro ao listar sabores' });

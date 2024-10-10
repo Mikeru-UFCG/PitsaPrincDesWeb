@@ -141,8 +141,20 @@ exports.getSabor = (req, res) => {
   return SaborController.getSabor(req, res);
 };
 
-exports.getSabores = (req, res) => {
-  return SaborController.getSabores(req, res);
+exports.getSabores = async (req, res) => {
+  const { query = {} } = req; // Garante que query seja um objeto
+  const { estabelecimentoId } = query; // Agora, podemos desestruturar estabelecimentoId com segurança
+
+  if (!estabelecimentoId) {
+    return res.status(400).json({ error: 'Estabelecimento ID é necessário' });
+  }
+
+  try {
+    // Chama o método getSabores do SaborController, passando o estabelecimentoId
+    return await SaborController.getSabores(req, res);
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao listar sabores' });
+  }
 };
 
 // Altera a disponibilidade de um sabor no cardápio do estabelecimento

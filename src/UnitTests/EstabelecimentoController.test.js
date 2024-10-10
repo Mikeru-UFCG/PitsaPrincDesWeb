@@ -16,6 +16,7 @@ describe('EstabelecimentoController', () => {
       status: jest.fn(() => res),
       json: jest.fn(),
       send: jest.fn(),
+      end: jest.fn(), // Adicionando o mock para o método end
     };
   });
 
@@ -356,11 +357,110 @@ describe('EstabelecimentoController', () => {
   });
 
   describe('Get sabores', () => {
+    let req, res;
+
+    beforeEach(() => {
+      req = {
+        query: { estabelecimentoId: 'estab123' }, // ID do estabelecimento como query parameter
+      };
+      res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+    });
+
+    it('Deve retornar uma lista de sabores com sucesso', async () => {
+      const mockSabores = [
+        { id: '1', nome: 'Sabor Teste', tipo: 'salgado', valorMedio: 30, valorGrande: 50 },
+        { id: '2', nome: 'Sabor Outro', tipo: 'doce', valorMedio: 25, valorGrande: 45 },
+      ];
+
+      // Simula o retorno do método findMany do Prisma
+      PrismaClient.prototype.sabor.findMany.mockResolvedValue(mockSabores);
+
+      await EstabelecimentoController.getSabores(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockSabores);
+    });
+
+    it('Deve retornar erro 500 se ocorrer um erro ao buscar sabores', async () => {
+      // Simula um erro ao chamar o método findMany do Prisma
+      PrismaClient.prototype.sabor.findMany.mockRejectedValue(new Error('Erro de banco de dados'));
+
+      await EstabelecimentoController.getSabores(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao listar sabores' });
+    });
   });
 
-  describe('Atualiza sabor', () => { });
+  describe('Atualiza sabor', () => {
+    beforeEach(() => {
+      req = {
+        params: { id: '1' }, // ID do sabor que será atualizado
+        body: {
+          nome: 'Sabor Atualizado',
+          tipo: 'doce',
+          valorMedio: 35,
+          valorGrande: 55,
+        },
+      };
+    });
 
-  describe('Remove sabor', () => { });
+    it('Deve atualizar um sabor com sucesso', async () => {
+      const mockSaborAtualizado = {
+        id: '1',
+        nome: 'Sabor Atualizado',
+        tipo: 'doce',
+        valorMedio: 35,
+        valorGrande: 55,
+      };
+
+      PrismaClient.prototype.sabor.update.mockResolvedValue(mockSaborAtualizado);
+
+      await EstabelecimentoController.updateSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(mockSaborAtualizado);
+    });
+
+    it('Deve retornar erro 500 se ocorrer um erro ao atualizar sabor', async () => {
+      PrismaClient.prototype.sabor.update.mockRejectedValue(new Error('Erro de banco de dados'));
+
+      await EstabelecimentoController.updateSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao atualizar sabor' });
+    });
+  });
+
+  describe('Remove sabor', () => {
+    beforeEach(() => {
+      req = {
+        params: { id: '1' }, // ID do sabor que será removido
+      };
+    });
+
+    it('Deve remover um sabor com sucesso', async () => {
+      // Mock do retorno do método delete
+      PrismaClient.prototype.sabor.delete.mockResolvedValue();
+
+      await EstabelecimentoController.deleteSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(204);
+      expect(res.end).toHaveBeenCalled();
+    });
+
+    it('Deve retornar erro 500 se ocorrer um erro ao remover sabor', async () => {
+      PrismaClient.prototype.sabor.delete.mockRejectedValue(new Error('Erro de banco de dados'));
+
+      await EstabelecimentoController.deleteSabor(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Erro ao excluir sabor' });
+    });
+  });
 
   describe('toggleDisponibilidadeSabor', () => {
 

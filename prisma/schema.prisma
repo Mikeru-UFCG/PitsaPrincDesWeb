@@ -60,7 +60,8 @@ model Sabor {
   valorMedio        Float
   valorGrande       Float
   disponibilidade   Boolean            @default(true)
-  estabelecimentos Estabelecimento[]
+  estabelecimento   Estabelecimento?   @relation(fields: [estabelecimentoId], references: [id])
+  estabelecimentoId Int
   pedidos           PizzaSabor[]
   interesses        InteresseSabor[]
 }
