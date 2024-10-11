@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { swaggerUi, specs } = require('./swagger'); // Importa o Swagger
+const cors = require('cors'); // Importa o middleware CORS
 
 // Importação das rotas
 const estabelecimentoRoutes = require('./routes/estabelecimentoRoutes');
@@ -10,13 +11,18 @@ const saborRoutes = require('./routes/saborRoutes');
 const entregaRoutes = require('./routes/entregaRoutes');
 const pedidoRoutes = require('./routes/pedidoRoutes');
 const notificacaoRoutes = require('./routes/notificacaoRoutes');
-const loginRoutes = require('./routes/loginRoutes');
-const protectedRoutes = require('./routes/protectedRoutes'); // Rotas protegidas
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json()); // Middleware para parsing de JSON
+
+// Configura o CORS para permitir requisições do front-end em localhost:3000
+app.use(cors({
+  origin: 'http://localhost:3001', // Permitir apenas essa origem
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos
+  credentials: true, // Se necessário para enviar cookies/credenciais
+}));
 
 // Middleware para injetar o Prisma Client nas requisições
 app.use((req, res, next) => {
@@ -43,7 +49,7 @@ app.get('/swagger.json', (req, res) => {
 });
 
 // Middleware para tratamento de erros
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Algo deu errado!' });
 });

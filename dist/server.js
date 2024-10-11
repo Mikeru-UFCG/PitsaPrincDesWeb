@@ -30,7 +30,7 @@ const swaggerSpec = (0, swagger_jsdoc_1.default)(options);
 
 app.use(express_1.default.json());
 app.get('/', (req, res) => {
-    res.send('Hello, world!');
+    res.send('PWD Pizzas, a sua plataforma de delivery de pizzas!');
 });
 
 // Rota de documentação do Swagger

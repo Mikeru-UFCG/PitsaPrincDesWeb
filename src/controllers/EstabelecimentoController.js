@@ -11,6 +11,8 @@ const generateToken = (estabelecimento) => {
 
 // Cria um novo estabelecimento
 exports.createEstabelecimento = async (req, res) => {
+  console.log('Requisição recebida:', req.body); // Adicione este log
+
   const { nome, codigoAcesso } = req.body; // Lê nome e código de acesso
 
   try {
@@ -45,6 +47,7 @@ exports.createEstabelecimento = async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error('Erro ao criar estabelecimento:', error);
     res.status(500).json({ error: 'Erro ao criar estabelecimento' });
   }
 };
