@@ -31,7 +31,6 @@ app.use((req, res, next) => {
 });
 
 // Registro das rotas
-app.use(express.json());
 app.use('/estabelecimentos', estabelecimentoRoutes);
 app.use('/clientes', clienteRoutes);
 app.use('/entregadores', entregadorRoutes);
