@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EntregadorController = require('../controllers/EntregadorController');
-const authMiddleware = require('../middlewares/authMiddleware'); // Importa o middleware
+const authMiddleware = require('../middleware/authMiddleware'); // Importa o middleware
 
 /**
  * @swagger

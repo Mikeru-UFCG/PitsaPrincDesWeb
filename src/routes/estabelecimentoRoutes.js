@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const EstabelecimentoController = require('../controllers/EstabelecimentoController');
-const authMiddleware = require('../middlewares/authMiddleware'); // Importa o middleware de autorização
+const authMiddleware = require('../middleware/authMiddleware'); // Importa o middleware de autorização
 
 /**
  * @swagger

@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
-const Estabelecimento = require('../models/Estabelecimento');
-const Cliente = require('../models/Cliente');
-const Entregador = require('../models/Entregador');
+const prisma = require('@prisma/client'); // Importa o Prisma Client
 
 // Middleware para autenticação e autorização com base em papéis
 const authenticateAndAuthorize = (allowedRoles = []) => {
@@ -23,17 +21,23 @@ const authenticateAndAuthorize = (allowedRoles = []) => {
         return res.status(403).json({ error: 'Acesso não autorizado' });
       }
 
-      // Verifica se o usuário existe no banco de dados
+      // Verifica se o usuário existe no banco de dados usando Prisma
       let user;
       switch (decoded.role) {
         case 'estabelecimento':
-          user = await Estabelecimento.findOne({ codigoAcesso: decoded.codigoAcesso });
+          user = await prisma.estabelecimento.findUnique({
+            where: { codigoAcesso: decoded.codigoAcesso },
+          });
           break;
         case 'cliente':
-          user = await Cliente.findOne({ codigoAcesso: decoded.codigoAcesso });
+          user = await prisma.cliente.findUnique({
+            where: { codigoAcesso: decoded.codigoAcesso },
+          });
           break;
         case 'entregador':
-          user = await Entregador.findOne({ codigoAcesso: decoded.codigoAcesso });
+          user = await prisma.entregador.findUnique({
+            where: { codigoAcesso: decoded.codigoAcesso },
+          });
           break;
         default:
           return res.status(401).json({ error: 'Credenciais inválidas' });
