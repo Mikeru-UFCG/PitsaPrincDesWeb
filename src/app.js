@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 app.use(express.json()); // Middleware para parsing de JSON
 
-// Configura o CORS para permitir requisições do front-end em localhost:3000
+// Configura o CORS para permitir requisições do front-end em localhost:3001
 app.use(cors({
   origin: 'http://localhost:3001', // Permitir apenas essa origem
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos
@@ -49,9 +49,14 @@ app.get('/swagger.json', (req, res) => {
 });
 
 // Middleware para tratamento de erros
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Algo deu errado!' });
+});
+
+// Rota de inicialização
+app.get('/', (req, res) => {
+  res.send('PWD Pizzas, a sua plataforma de delivery de pizzas!');
 });
 
 module.exports = app;

@@ -28,7 +28,7 @@ const authMiddleware = require('../middlewares/authMiddleware'); // Importa o mi
  *       400:
  *         description: Dados inválidos
  */
-router.post('/estabelecimentos', EstabelecimentoController.createEstabelecimento);
+router.post('/', EstabelecimentoController.createEstabelecimento);
 
 /**
  * @swagger
